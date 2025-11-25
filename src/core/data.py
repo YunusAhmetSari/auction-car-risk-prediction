@@ -86,3 +86,57 @@ def load_from_kaggle(
 
     _move_files(path, final_destination, replace)
     return os.listdir(full_destination_path)
+
+
+def load_competition_from_kaggle(
+    competition_name: str,
+    destination: str = "",
+    create_subfolder=True,
+    replace: bool = False,
+) -> list[str]:
+    """
+    Loads a competition dataset from Kaggle and moves it to the specified destination directory.
+    Args:
+        competition_name (str): The Kaggle competition name (e.g., 'DontGetKicked')
+
+        destination (str): The directory where the dataset will be saved. Defaults to the competition name.
+
+        create_subfolder (bool): If True, creates a subfolder with the competition name in the destination directory.
+
+        replace (bool): If False, existing files/directories won't be overwritten. If True, they will be replaced.
+    Returns:
+        List [str]: A list of file names that were moved to the destination directory.
+    """
+    # Check if destination already exists and handle replace logic
+    if create_subfolder:
+        final_destination = os.path.join(destination, competition_name)
+    else:
+        final_destination = destination
+
+    full_destination_path = os.path.join(os.getcwd(), final_destination)
+
+    # If destination exists and replace is False, return existing files without downloading
+    if os.path.exists(full_destination_path) and not replace:
+        existing_files = os.listdir(full_destination_path)
+        if existing_files:  # If directory exists and contains files
+            print(
+                f"Destination directory '{final_destination}' already exists with files. Skipping download (replace=False)."
+            )
+            return existing_files
+
+    # If replace is True and destination exists, remove it first
+    if os.path.exists(full_destination_path) and replace:
+        print(f"Removing existing destination directory: {final_destination}")
+        shutil.rmtree(full_destination_path)
+
+    # Download the competition data
+    path = kagglehub.competition_download(competition_name, force_download=True)
+
+    # Create destination directory
+    if not os.path.exists(full_destination_path):
+        os.makedirs(full_destination_path, exist_ok=True)
+
+    print(f"Loading competition data from {path} to {final_destination}")
+
+    _move_files(path, final_destination, replace)
+    return os.listdir(full_destination_path)
