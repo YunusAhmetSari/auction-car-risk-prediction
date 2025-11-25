@@ -73,6 +73,4 @@ uv sync
 
 ## Kontakt
 
-- GitHub: [@IAmBlindNotDeaf](https://github.com/YunusAhmetSari)
-- LinkedIn: [Yunus Ahmet Sari](https://www.linkedin.com/in/yunussari)
-- Mail: yunus-sari61@hotmail.de
+**[GitHub](https://github.com/YunusAhmetSari)** | **[LinkedIn](https://www.linkedin.com/in/yunussari/)** | **[E-Mail](mailto:yunusahmet61@gmail.com)**
