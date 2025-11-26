@@ -1,8 +1,8 @@
 import os
 import shutil
-import pandas as pd
 
 import kagglehub
+import pandas as pd
 
 
 def _move_files(source_path: str, destination: str, replace: bool = False) -> None:
@@ -142,6 +142,7 @@ def load_competition_from_kaggle(
     _move_files(path, final_destination, replace)
     return os.listdir(full_destination_path)
 
+
 def clean_data(df):
     """
     Converts data types and cleans up categories in the DataFrame.
@@ -151,16 +152,16 @@ def clean_data(df):
         df (pd.DataFrame): The cleaned DataFrame.
     """
     df = df.copy()
-    
+
     # Konvertiert Datum von Unix-Timestamp zu Datetime-Objekt
-    df["PurchDate"] = pd.to_datetime(df["PurchDate"], unit="s")
-    
+    df["PurchDate"] = pd.to_datetime(df["PurchDate"])
+
     # Konvertiert fälschlicherweise numerische Features zu Objekt
     wrong_dtypes = ["WheelTypeID", "BYRNO", "VNZIP1", "IsOnlineSale"]
     for col in wrong_dtypes:
         df[col] = df[col].astype(str)
-    
+
     # Vereinheitlicht und bereinigt Kategorien für mehr Konsistenz
     df["Transmission"] = df["Transmission"].replace("Manual", "MANUAL")
-            
+
     return df
