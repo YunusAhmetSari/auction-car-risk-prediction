@@ -159,7 +159,7 @@ def clean_data(df):
     # Konvertiert fälschlicherweise numerische Features zu Objekt
     wrong_dtypes = ["WheelTypeID", "BYRNO", "VNZIP1", "IsOnlineSale"]
     for col in wrong_dtypes:
-        df[col] = df[col].astype("category")
+        df[col] = df[col].astype("str")
 
     # Vereinheitlicht und bereinigt Kategorien für mehr Konsistenz
     df["Transmission"] = df["Transmission"].replace("Manual", "MANUAL")
