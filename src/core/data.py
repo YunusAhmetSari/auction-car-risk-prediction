@@ -165,3 +165,17 @@ def clean_data(df):
     df["Transmission"] = df["Transmission"].replace("Manual", "MANUAL")
 
     return df
+
+def engineer_features(df):
+    '''
+    Add new features to the DataFrame.
+    Args:
+        df (pd.DataFrame): DataFrame.
+    Returns:
+        df (pd.DataFrame): DataFrame with additional features.
+    '''
+    df["CostPerMile"] = df["VehBCost"] / df["VehOdo"]
+    df["WarrantyPerCost"] = df["WarrantyCost"] / df["VehBCost"]
+    df["MilesPerYear"] = df["VehOdo"] / (df["VehicleAge"] + 1)
+    
+    return df
