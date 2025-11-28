@@ -1,6 +1,6 @@
 import os
 import shutil
-
+import numpy as np
 import kagglehub
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -226,3 +226,24 @@ class TopNCategoriesTransformer(
     def set_output(self, *, transform=None):
         """Compatibility for sklearn's set_output API."""
         return self
+
+def memory_data(
+    df: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Optimises the memory usage of the DataFrame.
+    Args:
+        df (pd.DataFrame): The DataFrame to be optimised.
+    Returns:
+        df (pd.DataFrame): The optimised DataFrame.
+    """
+    df = df.copy()
+    
+    # Bestimmung der numerischen Features
+    num_cols = df.select_dtypes(include=np.number).columns.tolist()
+    
+    # Optimiere Speicherverbrauch durch Datentyp Konvertierung auf "unsigned" sofern möglich
+    for col in num_cols:
+        df[col] = pd.to_numeric(df[col], downcast='unsigned')
+    
+    return df
