@@ -3,6 +3,7 @@ import shutil
 
 import kagglehub
 import pandas as pd
+from sklearn.base import BaseEstimator, TransformerMixin
 
 
 def _move_files(source_path: str, destination: str, replace: bool = False) -> None:
@@ -169,7 +170,9 @@ def clean_data(
     return df
 
 
-def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
+def engineer_features(
+    df: pd.DataFrame
+) -> pd.DataFrame:
     """
     Add new features to the DataFrame.
     Args:
@@ -184,37 +187,42 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def topn_categorical_features(
-    df: pd.DataFrame,
-    bucket_cols: list[str],
-    top_n: int = 20,
-    bucket_dict: dict[str, list[str]] | None = None,
-) -> tuple[pd.DataFrame, dict[str, list[str]]]:
-    """
-    Combines rare categories based on their frequency into "Other".
-    Args:
-        df (pd.DataFrame): The DataFrame to be transformed.
-        bucket_cols (list): List of column names to be summarised.
-        top_n (int): The number of top categories to be retained.
-        bucket_dict (dict, optional): A dictionary with top categories learned.
-                                      If "None", it is learned from the df.
-    Returns:
-        df (pd.DataFrame): The transformed DataFrame.
-        dict [str, list[str]]: The (newly learned or transferred) bucketing dictionary.
-    """
-    df = df.copy()
+class TopNCategoriesTransformer(
+    BaseEstimator, 
+    TransformerMixin
+):
+    """sklearn-compatible transformer for bucketing high-cardinality categories."""
 
-    # Wenn kein Wörterbuch übergeben wird → beim Training lernen
-    if bucket_dict is None:
-        bucket_dict = {}
-        for col in bucket_cols:
+    def __init__(self, bucket_cols: list[str] | None = None, top_n: int = 20) -> None:
+        self.bucket_cols = bucket_cols
+        self.top_n = top_n
+        self.bucket_dict_: dict[str, set[str]] = {}
+
+    def fit(self, X, y=None):
+        df = pd.DataFrame(X, copy=True)
+
+        columns = (
+            self.bucket_cols if self.bucket_cols is not None else df.columns.tolist()
+        )
+
+        self.bucket_dict_.clear()
+        for col in columns:
             counts = df[col].value_counts()
-            top_categories = counts.nlargest(top_n).index.tolist()
-            bucket_dict[col] = top_categories
+            top_categories = counts.nlargest(self.top_n).index.tolist()
+            self.bucket_dict_[col] = set(top_categories)
 
-    # Transformation
-    for col in bucket_cols:
-        top_categories = bucket_dict.get(col, [])
-        df[col] = df[col].where(df[col].isin(top_categories), "Other")
+        return self
 
-    return df, bucket_dict
+    def transform(self, X):
+        df = pd.DataFrame(X, copy=True)
+
+        for col in df.columns:
+            top_categories = self.bucket_dict_.get(col, set())
+            if top_categories:
+                df[col] = df[col].where(df[col].isin(top_categories), "Other")
+
+        return df
+
+    def set_output(self, *, transform=None):
+        """Compatibility for sklearn's set_output API."""
+        return self
