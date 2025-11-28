@@ -1,7 +1,8 @@
 import os
 import shutil
-import numpy as np
+
 import kagglehub
+import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -170,9 +171,7 @@ def clean_data(
     return df
 
 
-def engineer_features(
-    df: pd.DataFrame
-) -> pd.DataFrame:
+def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     """
     Add new features to the DataFrame.
     Args:
@@ -187,10 +186,7 @@ def engineer_features(
     return df
 
 
-class TopNCategoriesTransformer(
-    BaseEstimator, 
-    TransformerMixin
-):
+class TopNCategoriesTransformer(BaseEstimator, TransformerMixin):
     """sklearn-compatible transformer for bucketing high-cardinality categories."""
 
     def __init__(self, bucket_cols: list[str] | None = None, top_n: int = 20) -> None:
@@ -227,9 +223,8 @@ class TopNCategoriesTransformer(
         """Compatibility for sklearn's set_output API."""
         return self
 
-def memory_data(
-    df: pd.DataFrame
-) -> pd.DataFrame:
+
+def memory_data(df: pd.DataFrame) -> pd.DataFrame:
     """
     Optimises the memory usage of the DataFrame.
     Args:
@@ -238,12 +233,30 @@ def memory_data(
         df (pd.DataFrame): The optimised DataFrame.
     """
     df = df.copy()
-    
+
     # Bestimmung der numerischen Features
     num_cols = df.select_dtypes(include=np.number).columns.tolist()
-    
+
     # Optimiere Speicherverbrauch durch Datentyp Konvertierung auf "unsigned" sofern möglich
     for col in num_cols:
-        df[col] = pd.to_numeric(df[col], downcast='unsigned')
-    
+        df[col] = pd.to_numeric(df[col], downcast="unsigned")
+
     return df
+
+
+def drop_columns(
+    df: pd.DataFrame,
+    cols_to_drop: list,
+) -> pd.DataFrame:
+    """
+    Feature Selection by dropping columns of the DataFrame.
+    Args:
+        df (pd.DataFrame): The original DataFrame.
+        cols_to_drop (list): List of column names to remove.
+    Returns:
+        df (pd.DataFrame): The DataFrame with selected features.
+    """
+    df = df.copy()
+    
+    # errors='ignore' verhindert Abstürze, falls eine Spalte schon weg ist
+    return df.drop(columns=cols_to_drop, errors="ignore")
