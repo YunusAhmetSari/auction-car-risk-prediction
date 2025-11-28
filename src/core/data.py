@@ -143,7 +143,9 @@ def load_competition_from_kaggle(
     return os.listdir(full_destination_path)
 
 
-def clean_data(df):
+def clean_data(
+    df: pd.DataFrame,
+) -> pd.DataFrame:
     """
     Converts data types and cleans up categories in the DataFrame.
     Args:
@@ -166,16 +168,53 @@ def clean_data(df):
 
     return df
 
-def engineer_features(df):
-    '''
+
+def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
+    """
     Add new features to the DataFrame.
     Args:
         df (pd.DataFrame): DataFrame.
     Returns:
         df (pd.DataFrame): DataFrame with additional features.
-    '''
+    """
     df["CostPerMile"] = df["VehBCost"] / df["VehOdo"]
     df["WarrantyPerCost"] = df["WarrantyCost"] / df["VehBCost"]
     df["MilesPerYear"] = df["VehOdo"] / (df["VehicleAge"] + 1)
-    
+
     return df
+
+
+def topn_categorical_features(
+    df: pd.DataFrame,
+    bucket_cols: list[str],
+    top_n: int = 20,
+    bucket_dict: dict[str, list[str]] | None = None,
+) -> tuple[pd.DataFrame, dict[str, list[str]]]:
+    """
+    Combines rare categories based on their frequency into "Other".
+    Args:
+        df (pd.DataFrame): The DataFrame to be transformed.
+        bucket_cols (list): List of column names to be summarised.
+        top_n (int): The number of top categories to be retained.
+        bucket_dict (dict, optional): A dictionary with top categories learned.
+                                      If "None", it is learned from the df.
+    Returns:
+        df (pd.DataFrame): The transformed DataFrame.
+        dict [str, list[str]]: The (newly learned or transferred) bucketing dictionary.
+    """
+    df = df.copy()
+
+    # Wenn kein Wörterbuch übergeben wird → beim Training lernen
+    if bucket_dict is None:
+        bucket_dict = {}
+        for col in bucket_cols:
+            counts = df[col].value_counts()
+            top_categories = counts.nlargest(top_n).index.tolist()
+            bucket_dict[col] = top_categories
+
+    # Transformation
+    for col in bucket_cols:
+        top_categories = bucket_dict.get(col, [])
+        df[col] = df[col].where(df[col].isin(top_categories), "Other")
+
+    return df, bucket_dict
