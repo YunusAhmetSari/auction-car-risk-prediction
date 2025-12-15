@@ -223,6 +223,15 @@ class TopNCategoriesTransformer(BaseEstimator, TransformerMixin):
         """Compatibility for sklearn's set_output API."""
         return self
 
+    def get_feature_names_out(self, input_features=None):
+        """
+        Gibt die gleichen Feature-Namen zurück wie am Eingang.
+        Top-N-Bucketing ändert nur die Werte, nicht die Spaltenstruktur.
+        """
+        if input_features is None:
+            # Fallback: benutze die im Fit gesehenen Spalten
+            return np.array(list(self.bucket_dict_.keys()))
+        return np.array(input_features)
 
 def memory_data(df: pd.DataFrame) -> pd.DataFrame:
     """
